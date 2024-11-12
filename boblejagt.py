@@ -1,3 +1,4 @@
+import json
 from tkinter import *
 from math import sqrt
 from random import randint
@@ -15,6 +16,7 @@ MAX_BOB_FART = 10
 BOB_CHANCE = 10
 TIDSFRIST = 30
 BONUS_SCORE = 1000
+HIGH_SCORE_FILE = "high_scores.json"
 
 # Start på Tkinter vindue
 window = Tk()
@@ -115,14 +117,40 @@ l.create_text(150, 30, text='SCORE', fill='white')
 tid_tekst = l.create_text(50, 50, fill='white')
 score_tekst = l.create_text(150, 50, fill='white')
 
+# Funktioner til vindertable
+def get_high_scores():
+    try:
+        with open(HIGH_SCORE_FILE, 'r') as f:
+            high_scores = json.load(f)
+    except FileNotFoundError:
+        high_scores = []
+    return high_scores
+
+def update_high_scores(name, score):
+    high_scores = get_high_scores()
+    high_scores.append({"name": name, "score": score})
+    high_scores = sorted(high_scores, key=lambda x: x['score'], reverse=True)[:5]
+    with open(HIGH_SCORE_FILE, 'w') as f:
+        json.dump(high_scores, f, indent=4)
+
+def show_high_scores():
+    high_scores = get_high_scores()
+    y_offset = 100
+    for i, entry in enumerate(high_scores):
+        l.create_text(MID_X, y_offset, text=f"{i+1}. {entry['name']} - {entry['score']}", fill='white')
+        y_offset += 30
+
 # Spilsløjfe med opdatering
 def spil():
     global score, bonus, slut
     if time() > slut:
         # Slut på spillet
+        name = "Spiller"  # Du kan ændre dette til at få spillerens navn via et inputfelt
+        update_high_scores(name, score)
         l.create_text(MID_X, MID_Y, text='GAME OVER', fill='white', font=('Helvetica', 30))
         l.create_text(MID_X, MID_Y + 30, text='Score: ' + str(score), fill='white')
         l.create_text(MID_X, MID_Y + 45, text='Bonustid: ' + str(bonus * TIDSFRIST), fill='white')
+        show_high_scores()
         return
 
     if randint(1, BOB_CHANCE) == 1:
